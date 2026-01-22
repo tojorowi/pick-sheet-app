@@ -110,8 +110,18 @@ def generate_pick_sheets(df):
     pdf_files = []
     os.makedirs("output", exist_ok=True)
 
-    # Group jobs by PO (Purchase Order) - handle both "PO" and "PO#" column names
-    po_column = "PO#" if "PO#" in df.columns else "PO"
+    # Clean column names - strip whitespace
+    df.columns = df.columns.str.strip()
+    
+    # Find the PO column (case-insensitive search)
+    po_column = None
+    for col in df.columns:
+        if col.upper() in ['PO', 'PO#', 'PO #']:
+            po_column = col
+            break
+    
+    if po_column is None:
+        raise ValueError(f"Could not find PO column. Available columns: {list(df.columns)}")
     
     for po, job_df in df.groupby(po_column):
         # Replace NaN values with empty strings for safety
@@ -167,9 +177,17 @@ uploaded_file = st.file_uploader("Upload Excel File", type=["xlsx"])
 
 if uploaded_file:
     df = pd.read_excel(uploaded_file)
+    
+    # Debug: Show column names
+    st.write("Detected columns:", list(df.columns))
+    
     st.success("File uploaded successfully. Generating pick sheets...")
-    pdf_list = generate_pick_sheets(df)
-    merged_file = "output/all_jobs_pick_sheet_combined.pdf"
-    merge_pdfs(pdf_list, merged_file)
-    with open(merged_file, "rb") as f:
-        st.download_button("Download Combined PDF", f, file_name="All_Pick_Sheets.pdf")
+    
+    try:
+        pdf_list = generate_pick_sheets(df)
+        merged_file = "output/all_jobs_pick_sheet_combined.pdf"
+        merge_pdfs(pdf_list, merged_file)
+        with open(merged_file, "rb") as f:
+            st.download_button("Download Combined PDF", f, file_name="All_Pick_Sheets.pdf")
+    except ValueError as e:
+        st.error(str(e))
