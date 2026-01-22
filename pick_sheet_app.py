@@ -116,7 +116,7 @@ def generate_pick_sheets(df):
     # Find the PO column (case-insensitive search)
     po_column = None
     for col in df.columns:
-        if col.upper() in ['PO', 'PO#', 'PO #']:
+        if col.upper() in ['PO', 'PO#', 'PO #', 'CONTRACTID']:
             po_column = col
             break
     
