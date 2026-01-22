@@ -110,8 +110,10 @@ def generate_pick_sheets(df):
     pdf_files = []
     os.makedirs("output", exist_ok=True)
 
-    # Group jobs by PO (Purchase Order)
-    for po, job_df in df.groupby("PO"):
+    # Group jobs by PO (Purchase Order) - handle both "PO" and "PO#" column names
+    po_column = "PO#" if "PO#" in df.columns else "PO"
+    
+    for po, job_df in df.groupby(po_column):
         # Replace NaN values with empty strings for safety
         job_df = job_df.replace({np.nan: ""})
         # Extract installation date from the first row
